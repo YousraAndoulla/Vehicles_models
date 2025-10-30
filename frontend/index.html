@@ -1,0 +1,1258 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Vehicle Type Detection & Traffic Congestion Estimation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #ffffff;
+      color: #2c3e50;
+      line-height: 1.6;
+    }
+    .header {
+      background: #fff;
+      padding: 1.2rem 0;
+      box-shadow: 0 2px 10px rgba(90,159,184,.1);
+      border-bottom: 3px solid #5a9fb8;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1rem;
+    }
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #5a9fb8;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: #4a5568;
+      text-decoration: none;
+      font-weight: 600;
+      padding: .4rem .8rem;
+      border-radius: .5rem;
+      transition: all 0.3s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: #fff;
+      background: #5a9fb8;
+    }
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    /* HOME PAGE STYLES */
+    .hero-banner {
+      background: url('assets/background_system.jpg') center/cover no-repeat;
+      background-size: cover;
+      background-position: center;
+      color: #fff;
+      padding: 4rem 2rem;
+      border-radius: 1rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      position: relative;
+      min-height: 400px;
+}
+
+    .hero-title {
+      background: rgba(0,0,0,0.3);
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: .8rem;
+      display: inline-block;
+      padding: 0.5rem 1.5rem;
+      border-radius: 0.5rem;
+    }
+    .hero-description {
+      background: rgba(0,0,0,0.3);
+      display: inline-block;
+      padding: 0.5rem 1.5rem;
+      border-radius: 0.5rem;
+      opacity: .95;
+      font-size: 1.1rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .hero-title, .hero-description {
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+}
+    .capabilities {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    .cap {
+      background: #fff;
+      border: 2px solid #e3f2fd;
+      padding: 2rem 1.5rem;
+      border-radius: 1rem;
+      text-align: center;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(90,159,184,.08);
+    }
+    .cap:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(90,159,184,.15);
+      border-color: #5a9fb8;
+    }
+    .cap b {
+      color: #5a9fb8;
+      font-size: 1.3rem;
+      display: block;
+      margin-bottom: 0.8rem;
+    }
+
+    /* PROCESSING PAGE STYLES */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 3px solid #5a9fb8;
+    }
+
+    .analysis {
+      background: #fff;
+      border: 2px solid #e3f2fd;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 2px 10px rgba(90,159,184,.08);
+    }
+
+    .upload-zone {
+      border: 3px dashed #5a9fb8;
+      border-radius: 1rem;
+      padding: 3rem 1rem;
+      text-align: center;
+      background: #f8fcfd;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .upload-zone:hover {
+      background: #e3f2fd;
+      border-color: #2c3e50;
+    }
+    .upload-content {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #5a9fb8;
+    }
+
+    .execute-button {
+      margin-top: 1.5rem;
+      background: linear-gradient(135deg, #5a9fb8 0%, #2c3e50 100%);
+      color: #fff;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: .8rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s;
+    }
+    .execute-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(90,159,184,.3);
+    }
+    .execute-button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .progress-section {
+      display: none;
+      margin-top: 1.5rem;
+    }
+    .progress-track {
+      height: 12px;
+      background: #e3f2fd;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .progress-indicator {
+      height: 100%;
+      background: linear-gradient(90deg, #5a9fb8, #2c3e50);
+      width: 0;
+      transition: width 0.3s;
+    }
+
+    .results {
+      display: none;
+      margin-top: 2rem;
+      background: #fff;
+      border: 2px solid #e3f2fd;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 2px 10px rgba(90,159,184,.08);
+    }
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .media {
+      width: 100%;
+      border: 2px solid #e3f2fd;
+      border-radius: .8rem;
+    }
+    .metrics {
+      background: #f8fcfd;
+      border: 2px solid #e3f2fd;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+    .metric {
+      background: #fff;
+      border: 2px solid #e3f2fd;
+      border-radius: .8rem;
+      padding: 1.2rem;
+      text-align: center;
+    }
+    .metric .n {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #5a9fb8;
+    }
+    .status {
+      margin-top: 1.5rem;
+      padding: 1.2rem;
+      border-radius: .8rem;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .status-optimal {
+      background: #d4f4dd;
+      color: #2d5f3b;
+      border: 2px solid #a8d5c1;
+    }
+    .status-moderate {
+      background: #fff4e6;
+      color: #8b6914;
+      border: 2px solid #ffe4b3;
+    }
+    .status-congested {
+      background: #fce4e4;
+      color: #8b2e39;
+      border: 2px solid #f5c6cb;
+    }
+    .note {
+      margin-top: .6rem;
+      color: #6b7280;
+      font-size: .9rem;
+      font-weight: 600;
+    }
+    .upload-details {
+      color: #5a9fb8;
+      font-size: .95rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 800px) {
+      .grid2 { grid-template-columns: 1fr; }
+      .hero-title { font-size: 1.8rem; }
+      .nav-links { gap: 0.5rem; }
+    }
+
+    .session-card {
+      background: #fff;
+      border: 2px solid #e3f2fd;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .session-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(90,159,184,.15);
+      border-color: #5a9fb8;
+    }
+
+    .session-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .session-title {
+      font-weight: 700;
+      color: #2c3e50;
+      font-size: 1.1rem;
+    }
+
+    .session-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .session-stat {
+      background: #f8fcfd;
+      padding: 0.8rem;
+      border-radius: 0.5rem;
+      text-align: center;
+    }
+
+    .session-stat-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #5a9fb8;
+    }
+
+    .session-stat-label {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="nav-container">
+      <div class="logo">Traffic Analytics</div>
+      <ul class="nav-links">
+        <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
+        <li><a href="#" class="nav-link" data-page="image">Image Detection</a></li>
+        <li><a href="#" class="nav-link" data-page="video">Video Detection</a></li>
+        <li><a href="#" class="nav-link" data-page="realtime">Real-time Detection</a></li>
+        <li><a href="#" class="nav-link" data-page="history">History</a></li>
+        <li><a href="#" class="nav-link" data-page="realtime-history">Real-time History</a></li>
+
+      </ul>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- HOME PAGE -->
+    <div id="home" class="page active">
+      <section class="hero-banner">
+        <div class="hero-title">Smart Vehicle Detection & Traffic Analysis</div>
+        <div class="hero-description">Upload images, videos, or connect a live stream—to detect vehicle types and estimate congestion.</div>
+      </section>
+
+      <section class="capabilities">
+        <div class="cap">
+          <b>Images</b>
+          <p>Upload a traffic image. Our system detects vehicles, classifies their types, analyzes flow and road occupancy, and estimates the congestion level.</p>
+
+        </div>
+        <div class="cap">
+          <b>Videos</b>
+          <p>Upload a traffic video. We use YOLO11x for vehicle type detection & tracking and YOLO11l-seg for road/lane/crosswalk segmentation, then aggregate flow and occupancy over time to estimate the congestion level.</p>
+
+        </div>
+        <div class="cap">
+          <b>Real Time</b>
+          <p>Connect a live camera or stream URL. In real time we run YOLO11x (vehicle type detection & tracking) and YOLO11l-seg (road/lane/crosswalk segmentation) to compute occupancy, volume-to-capacity, and the live congestion level.</p>
+
+        </div>
+      </section>
+    </div>
+
+    <!-- HISTORY PAGE -->
+<div id="history" class="page">
+  <h2 class="page-title">Analysis History</h2>
+  <input id="userIdInput" value="anonymous" placeholder="User ID"
+         style="width:100%;padding:.8rem;margin:.5rem 0 1rem;border:2px solid #e3f2fd;border-radius:.5rem;">
+  <button onclick="loadHistory()" class="execute-button" style="max-width:240px;">Load History</button>
+  <table id="historyTable" style="width:100%;margin-top:1rem;border-collapse:collapse;">
+    <thead>
+      <tr style="background:#f8fcfd;">
+        <th style="text-align:left;padding:.6rem;">File</th>
+        <th style="text-align:left;padding:.6rem;">Vehicles</th>
+        <th style="text-align:left;padding:.6rem;">Occupancy</th>
+        <th style="text-align:left;padding:.6rem;">Status</th>
+        <th style="text-align:left;padding:.6rem;">Date</th>
+      </tr>
+    </thead>
+    <tbody id="historyBody"></tbody>
+  </table>
+</div>
+
+
+    <!-- IMAGE DETECTION PAGE -->
+    <div id="image" class="page">
+      <h2 class="page-title">Image Detection</h2>
+      <section class="analysis">
+        <div class="upload-zone" id="uploadZoneImage">
+          <div class="upload-content">Click to choose an image file…</div>
+          <div class="upload-details">Supported formats: JPG, PNG, WEBP</div>
+          <input type="file" id="fileInputImage" style="display:none" accept="image/*">
+        </div>
+        <button class="execute-button" id="executeBtnImage" disabled>Start Analysis</button>
+
+        <div class="progress-section" id="progressSectionImage">
+          <div class="progress-track"><div class="progress-indicator" id="progressIndicatorImage"></div></div>
+          <div class="note" id="progressLabelImage">Processing…</div>
+        </div>
+      </section>
+
+      <section class="results" id="resultsImage">
+        <div class="grid2">
+          <div>
+            <div class="note">Original Image</div>
+            <img id="originalImage" class="media">
+          </div>
+          <div>
+            <div class="note">Traffic Analysis</div>
+            <img id="processedImage" class="media">
+          </div>
+        </div>
+        <div class="metrics">
+           <div class="metrics-grid">
+                <div class="metric"><div class="n" id="vehicleCountImage">0</div><div>Vehicles Detected</div></div>
+                <div class="metric"><div class="n" id="occupancyImage">0%</div><div>Road Occupancy</div></div>
+               <div class="metric"><div class="n" id="xwalkImage">0%</div><div>Crosswalk Blocking</div></div>
+           </div>
+
+          <div class="status status-optimal" id="trafficStatusImage">Traffic Status: Ready</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- VIDEO DETECTION PAGE -->
+    <div id="video" class="page">
+      <h2 class="page-title">Video Detection</h2>
+      <section class="analysis">
+        <div class="upload-zone" id="uploadZoneVideo">
+          <div class="upload-content">Click to choose a video file…</div>
+          <div class="upload-details">Supported formats: MP4, MOV, AVI (≤ 500MB)</div>
+          <input type="file" id="fileInputVideo" style="display:none" accept="video/*">
+        </div>
+        <button class="execute-button" id="executeBtnVideo" disabled>Start Analysis</button>
+
+        <div class="progress-section" id="progressSectionVideo">
+          <div class="progress-track"><div class="progress-indicator" id="progressIndicatorVideo"></div></div>
+          <div class="note" id="progressLabelVideo">Processing…</div>
+        </div>
+      </section>
+
+
+      <section class="results" id="resultsVideo">
+        <div class="grid2">
+          <div>
+            <div class="note">Original Video</div>
+            <video id="originalVideo" class="media" controls></video>
+          </div>
+          <div>
+            <div class="note">Traffic Analysis</div>
+            <video id="processedVideo" class="media" controls></video>
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metrics-grid">
+            <div class="metric"><div class="n" id="vehicleCountVideo">0</div><div>Vehicles Detected</div></div>
+            <div class="metric"><div class="n" id="laneCountVideo">0</div><div>Active Lanes</div></div>
+            <div class="metric"><div class="n" id="occupancyVideo">0%</div><div>Road Occupancy</div></div>
+            <div class="metric"><div class="n" id="flowRateVideo">0</div><div>Flow Rate (vph)</div></div>
+          </div>
+          <div class="status status-optimal" id="trafficStatusVideo">Traffic Status: Ready</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- REAL-TIME DETECTION PAGE -->
+<div id="realtime" class="page">
+  <h2 class="page-title">Real-time Detection</h2>
+  <section class="analysis">
+    <div style="background: #fff; border: 2px solid #e3f2fd; padding: 2rem; border-radius: 1rem; text-align: center;">
+      <h3 style="color: #5a9fb8; margin-bottom: 1rem;">Live Stream Configuration</h3>
+      <p style="color: #6b7280; margin-bottom: 1.5rem;">Connect to live camera feeds or stream URLs for real-time traffic monitoring.</p>
+      <input type="text" id="streamUrlInput" placeholder="Enter stream URL (YouTube)" style="width: 100%; padding: 1rem; border: 2px solid #e3f2fd; border-radius: .8rem; font-size: 1rem; margin-bottom: 1rem;">
+      <button class="execute-button" id="connectStreamBtn">Connect to Stream</button>
+      <div class="note" style="margin-top: 1rem;" id="streamStatus">Enter a stream URL to begin</div>
+    </div>
+  </section>
+
+  <!-- Live Stream Display -->
+  <section class="results" id="resultsStream" style="display: none;">
+    <div style="text-align: center;">
+      <div class="note" style="margin-bottom: 1rem;">Live Traffic Stream</div>
+      <div id="streamContainer" style="background: #000; border-radius: .8rem; overflow: hidden; min-height: 400px; display: flex; align-items: center; justify-content: center;">
+        <video id="liveStream" class="media" autoplay muted style="max-width: 100%; height: auto;"></video>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metrics-grid">
+         <div class="metric"><div class="n" id="vehicleCountStream">0</div><div>Vehicles Detected</div></div>
+         <div class="metric"><div class="n" id="laneCountStream">0</div><div>Active Lanes</div></div>
+         <div class="metric"><div class="n" id="occupancyStream">0%</div><div>Road Occupancy</div></div>
+         <div class="metric"><div class="n" id="xwalkStream">0%</div><div>Crosswalk Blocking</div></div> <!-- ADD THIS -->
+         <div class="metric"><div class="n" id="flowRateStream">0</div><div>Flow Rate (vph)</div></div>
+      </div>
+      <div class="status status-optimal" id="trafficStatusStream">Traffic Status: Monitoring</div>
+    </div>
+
+    <button class="execute-button" id="disconnectStreamBtn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); margin-top: 1rem;">Disconnect Stream</button>
+  </section>
+</div>
+  </main>
+
+  <section class="results" id="sessionMetricsView" style="display: none; margin-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="color: #5a9fb8;">Session Metrics Timeline</h3>
+      <button onclick="closeSessionView()" class="execute-button" style="max-width: 120px; padding: 0.6rem 1rem; font-size: 0.9rem;">Back</button>
+    </div>
+
+    <div style="background: #f8fcfd; border: 2px solid #e3f2fd; padding: 1.5rem; border-radius: 1rem; margin-bottom: 1rem;">
+      <div id="sessionInfo"></div>
+    </div>
+
+    <div style="background: #fff; border: 2px solid #e3f2fd; border-radius: 1rem; overflow: hidden;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: #f8fcfd; border-bottom: 2px solid #e3f2fd;">
+            <th style="text-align: left; padding: 1rem;">Time (s)</th>
+            <th style="text-align: left; padding: 1rem;">Vehicles</th>
+            <th style="text-align: left; padding: 1rem;">Lanes</th>
+            <th style="text-align: left; padding: 1rem;">Occupancy</th>
+            <th style="text-align: left; padding: 1rem;">Flow (vph)</th>
+            <th style="text-align: left; padding: 1rem;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="metricsTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <section class="results" id="resultsStream" style="display: none;">
+        <div style="text-align: center;">
+          <div class="note" style="margin-bottom: 1rem;">Live Traffic Stream</div>
+          <div id="streamContainer" style="background: #000; border-radius: .8rem; overflow: hidden; min-height: 400px; display: flex; align-items: center; justify-content: center;">
+            <video id="liveStream" class="media" autoplay muted style="max-width: 100%; height: auto;"></video>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metrics-grid">
+
+            <div class="metric"><div class="n" id="laneCountStream">0</div><div>Active Lanes</div></div>
+            <div class="metric"><div class="n" id="occupancyStream">0%</div><div>Road Occupancy</div></div>
+            <div class="metric"><div class="n" id="xwalkStream">0%</div><div>Crosswalk Blocking</div></div>
+            <div class="metric"><div class="n" id="flowRateStream">0</div><div>Flow Rate (vph)</div></div>
+          </div>
+          <div class="status status-optimal" id="trafficStatusStream">Traffic Status: Monitoring</div>
+        </div>
+
+        <button class="execute-button" id="disconnectStreamBtn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); margin-top: 1rem;">Disconnect Stream</button>
+      </section>
+    </div>
+
+
+
+  <div id="realtime-history" class="page">
+      <h2 class="page-title">Real-time Monitoring Sessions</h2>
+
+      <section class="analysis">
+        <div style="background: #fff; border: 2px solid #e3f2fd; padding: 2rem; border-radius: 1rem;">
+          <h3 style="color: #5a9fb8; margin-bottom: 1rem;">Your Live Stream Sessions</h3>
+          <input id="userIdInputRealtime" value="anonymous" placeholder="User ID"
+                 style="width:100%;padding:.8rem;margin:.5rem 0 1rem;border:2px solid #e3f2fd;border-radius:.5rem;">
+          <button onclick="loadRealtimeSessions()" class="execute-button" style="max-width:240px;">Load Sessions</button>
+        </div>
+      </section>
+
+      <section class="results" id="sessionsList" style="display: none; margin-top: 2rem;">
+        <h3 style="color: #5a9fb8; margin-bottom: 1rem;">Session Details</h3>
+
+        <div id="sessionsContainer">
+          <!-- Sessions will be populated here -->
+        </div>
+      </section>
+    </div>
+
+  <script>
+    function fmtPct(x) { return ((+x || 0) * 100).toFixed(1) + '%'; }
+    document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const pageName = link.dataset.page;
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.getElementById(pageName).classList.add('active');
+      link.classList.add('active');
+      if (pageName === 'history') loadHistory();
+    });
+  });
+
+  // ---- Image processing ----
+  let selectedImageFile = null;
+  const uploadZoneImage = document.getElementById('uploadZoneImage');
+  const fileInputImage   = document.getElementById('fileInputImage');
+  const executeBtnImage  = document.getElementById('executeBtnImage');
+
+  uploadZoneImage.addEventListener('click', () => fileInputImage.click());
+  fileInputImage.addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (!f.type.startsWith('image/')) { alert('Please select an image file.'); return; }
+    selectedImageFile = f;
+    uploadZoneImage.querySelector('.upload-content').textContent = 'Selected: ' + f.name;
+    executeBtnImage.disabled = false;
+  });
+
+
+  executeBtnImage.addEventListener('click', async () => {
+    if (!selectedImageFile) return;
+    const form = new FormData();
+    form.append('file', selectedImageFile);
+    form.append('user_id', 'anonymous');  // ADD THIS
+
+    showProgress('Image');
+    try {
+      const res = await fetch('/api/process?kind=image', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Processing failed');
+      hideProgress('Image');
+      showResults(data, 'Image');
+    } catch (err) {
+      hideProgress('Image');
+      alert(err.message);
+    }
+  });
+
+  // ---- Video processing ----
+  let selectedVideoFile = null;
+  const uploadZoneVideo = document.getElementById('uploadZoneVideo');
+  const fileInputVideo   = document.getElementById('fileInputVideo');
+  const executeBtnVideo  = document.getElementById('executeBtnVideo');
+
+  uploadZoneVideo.addEventListener('click', () => fileInputVideo.click());
+  fileInputVideo.addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (!f.type.startsWith('video/')) { alert('Please select a video file.'); return; }
+    if (f.size > 500 * 1024 * 1024) { alert('File too large (>500MB).'); return; }
+    selectedVideoFile = f;
+    uploadZoneVideo.querySelector('.upload-content').textContent = 'Selected: ' + f.name;
+    executeBtnVideo.disabled = false;
+  });
+
+   executeBtnVideo.addEventListener('click', async () => {
+  if (!selectedVideoFile) return;
+  const form = new FormData();
+  form.append('file', selectedVideoFile);
+  form.append('user_id', 'anonymous');
+
+  showProgress('Video');
+
+  // Keep connection alive with longer timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 1200000); // 20 min
+
+  try {
+    const res = await fetch('/api/process?kind=video', {
+      method: 'POST',
+      body: form,
+      signal: controller.signal,
+      keepalive: true
+    });
+    clearTimeout(timeoutId);
+
+    const ct = res.headers.get('content-type') || '';
+    const raw = await res.text();
+    const data = ct.includes('application/json') ? JSON.parse(raw) : null;
+
+    if (!res.ok) {
+      const msg = (data && data.error) ||
+                  (res.status === 413 ? 'File too large (server limit).' :
+                   res.status === 524 ? 'Processing timeout. Try a shorter video.' :
+                   `Upload failed (HTTP ${res.status}).`);
+      throw new Error(msg);
+    }
+
+    if (!data) throw new Error('Server returned non-JSON response.');
+    hideProgress('Video');
+    showResults(data, 'Video');
+  } catch (err) {
+    clearTimeout(timeoutId);
+    hideProgress('Video');
+    if (err.name === 'AbortError') {
+      alert('Processing took too long. Please try a shorter video (< 2 minutes).');
+    } else {
+      alert(err.message || 'Processing failed');
+    }
+  }
+});
+
+  // ---- Progress helpers ----
+  function showProgress(type) {
+    document.getElementById('progressSection' + type).style.display = 'block';
+    document.getElementById('progressIndicator' + type).style.width = '0%';
+    document.getElementById('executeBtn' + type).disabled = true;
+    let p = 0;
+    const el  = document.getElementById('progressIndicator' + type);
+    const lbl = document.getElementById('progressLabel' + type);
+    const id = setInterval(() => {
+      p = Math.min(95, p + 7);
+      el.style.width = p + '%';
+      lbl.textContent = 'Processing… ' + p + '%';
+      if (p >= 95) clearInterval(id);
+    }, 300);
+  }
+
+  function hideProgress(type) {
+    document.getElementById('progressSection' + type).style.display = 'none';
+    document.getElementById('executeBtn' + type).disabled = false;
+  }
+
+  // ---- Results (Image + Video) ----
+  function showResults(result, type) {
+    const results = document.getElementById('results' + type);
+    results.style.display = 'block';
+
+    // media preview
+    if (type === 'Image') {
+      document.getElementById('originalImage').src  = URL.createObjectURL(selectedImageFile);
+      document.getElementById('processedImage').src = result.output;
+    } else {
+      document.getElementById('originalVideo').src  = URL.createObjectURL(selectedVideoFile);
+      document.getElementById('processedVideo').src = result.output;
+    }
+
+    // metrics
+    const m = result.metrics || {};
+    const status = m.congestion_label || 'Optimal Flow';
+
+    if (type === 'Image') {
+      const veh = m.vehicles ?? 0;
+      const occ = Math.round((m.occupancy ?? 0) * 100);
+      const xw  = Math.round((m.crosswalk_blocked ?? 0) * 100);
+
+      document.getElementById('vehicleCountImage').textContent = veh;
+      document.getElementById('occupancyImage').textContent = fmtPct(m.occupancy);
+      document.getElementById('xwalkImage').textContent     = fmtPct(m.crosswalk_blocked);
+
+      // (optional) hide video-only tiles if they still exist in DOM
+      const laneTile = document.getElementById('laneCountImage')?.closest('.metric');
+      const flowTile = document.getElementById('flowRateImage')?.closest('.metric');
+      if (laneTile) laneTile.style.display = 'none';
+      if (flowTile) flowTile.style.display = 'none';
+
+      const statusEl = document.getElementById('trafficStatusImage');
+      statusEl.className = 'status';
+      statusEl.textContent = 'Traffic Status: ' + status;
+      if (status === 'Optimal Flow') statusEl.classList.add('status-optimal');
+      else if (status === 'Moderate') statusEl.classList.add('status-moderate');
+      else statusEl.classList.add('status-congested');
+
+    } else {
+      const veh  = m.vehicles ?? 0;
+      const lanes = m.active_lanes ?? 1;
+      const occ  = Math.round((m.occupancy ?? 0) * 100);
+      const flow = Math.round(m.flow_rate_vph ?? 0);
+
+      document.getElementById('vehicleCountVideo').textContent = veh;
+      document.getElementById('laneCountVideo').textContent    = lanes;
+      document.getElementById('occupancyVideo').textContent = fmtPct(m.occupancy);
+      document.getElementById('flowRateVideo').textContent     = flow;
+
+      const statusEl = document.getElementById('trafficStatusVideo');
+      statusEl.className = 'status';
+      statusEl.textContent = 'Traffic Status: ' + status;
+      if (status === 'Optimal Flow') statusEl.classList.add('status-optimal');
+      else if (status === 'Moderate') statusEl.classList.add('status-moderate');
+      else statusEl.classList.add('status-congested');
+    }
+
+    results.scrollIntoView({ behavior: 'smooth' });
+  }
+
+    // Replace the real-time streaming section in your frontend's <script> tag
+
+// Real-time stream processing - FIXED VERSION
+const streamUrlInput = document.getElementById('streamUrlInput');
+const connectStreamBtn = document.getElementById('connectStreamBtn');
+const disconnectStreamBtn = document.getElementById('disconnectStreamBtn');
+const streamStatus = document.getElementById('streamStatus');
+const resultsStream = document.getElementById('resultsStream');
+
+let currentStreamId = null;
+let metricsInterval = null;
+
+// Connect to stream
+ // In frontend/index.html, replace the connectStreamBtn event listener:
+
+// Replace the connectStreamBtn event listener in frontend/index.html
+
+connectStreamBtn.addEventListener('click', async () => {
+  const streamUrl = streamUrlInput.value.trim();
+
+  if (!streamUrl) {
+    alert('Please enter a stream URL');
+    return;
+  }
+
+  connectStreamBtn.disabled = true;
+  connectStreamBtn.textContent = 'Connecting...';
+  streamStatus.textContent = 'Starting stream...';
+  streamStatus.style.color = '#5a9fb8';
+
+  try {
+    const response = await fetch('/api/stream/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stream_url: streamUrl,
+        duration: 3600,
+        user_id: 'anonymous'
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to start stream');
+    }
+
+    const streamId = data.stream_id;
+    console.log('Stream started:', streamId);
+
+    resultsStream.style.display = 'block';
+    streamStatus.textContent = 'Live stream active';
+    streamStatus.style.color = '#2d5f3b';
+
+    // Create canvas for displaying frames
+    const streamContainer = document.getElementById('streamContainer');
+    streamContainer.innerHTML = '<canvas id="liveCanvas" style="max-width: 100%; border-radius: 0.8rem;"></canvas>';
+    const canvas = document.getElementById('liveCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Connect to Server-Sent Events
+    const eventSource = new EventSource(`/api/stream/${streamId}/frames`);
+
+    // In the eventSource.onmessage handler, update to:
+eventSource.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+
+  if (data.done) {
+    console.log('Stream complete');
+    eventSource.close();
+    streamStatus.textContent = 'Stream finished';
+    connectStreamBtn.disabled = false;
+    connectStreamBtn.textContent = 'Connect to Stream';
+    return;
+  }
+
+  if (data.frame) {
+    const img = new Image();
+    img.onload = () => {
+      // Only update if image is actually new
+      if (canvas.width !== img.width || canvas.height !== img.height) {
+        canvas.width = img.width;
+        canvas.height = img.height;
+      }
+      
+      // Use requestAnimationFrame for smoother rendering
+      requestAnimationFrame(() => {
+        ctx.drawImage(img, 0, 0);
+      });
+    };
+    img.src = 'data:image/jpeg;base64,' + data.frame;
+
+    // Update metrics (throttled to every 500ms)
+    const now = Date.now();
+    if (!window.lastMetricsUpdate || now - window.lastMetricsUpdate > 500) {
+      document.getElementById('vehicleCountStream').textContent = data.vehicles || 0;
+      document.getElementById('occupancyStream').textContent = ((data.occupancy || 0) * 100).toFixed(1) + '%';
+      document.getElementById('laneCountStream').textContent = data.active_lanes || 0;
+      document.getElementById('flowRateStream').textContent = Math.round(data.flow_rate_vph || 0);
+      document.getElementById('xwalkStream').textContent = ((data.crosswalk_blocked || 0) * 100).toFixed(1) + '%';
+
+      const statusEl = document.getElementById('trafficStatusStream');
+      const labels = ['Optimal Flow', 'Moderate', 'Heavy Congestion'];
+      statusEl.textContent = 'Traffic Status: ' + labels[data.congestion_level || 0];
+      statusEl.className = 'status';
+
+      if (data.congestion_level === 0) statusEl.classList.add('status-optimal');
+      else if (data.congestion_level === 1) statusEl.classList.add('status-moderate');
+      else statusEl.classList.add('status-congested');
+      
+      window.lastMetricsUpdate = now;
+    }
+  }
+};
+
+    eventSource.onerror = (error) => {
+      console.error('Stream error:', error);
+      eventSource.close();
+      streamStatus.textContent = 'Stream disconnected';
+      streamStatus.style.color = '#e74c3c';
+      connectStreamBtn.disabled = false;
+      connectStreamBtn.textContent = 'Connect to Stream';
+    };
+
+    // Store for cleanup
+    window.currentStreamId = streamId;
+    window.currentEventSource = eventSource;
+
+  } catch (error) {
+    console.error('Stream error:', error);
+    alert(error.message || 'Failed to start stream');
+    streamStatus.textContent = 'Failed: ' + error.message;
+    streamStatus.style.color = '#e74c3c';
+    connectStreamBtn.disabled = false;
+    connectStreamBtn.textContent = 'Connect to Stream';
+  }
+});
+
+// NEW: Update metrics from live stream
+function updateStreamMetricsLive(metrics) {
+  if (!metrics || metrics.length === 0) return;
+
+  let totalVehicles = 0;
+  let avgOccupancy = 0;
+  let avgFlowRate = 0;
+  let avgLanes = 0;
+  let finalLevel = 0;
+
+  metrics.forEach(m => {
+    totalVehicles += m.vehicles;
+    avgOccupancy += m.occupancy;
+    avgFlowRate += m.flow_rate_vph;
+    avgLanes += m.active_lanes;
+    finalLevel = m.congestion_level;
+  });
+
+  const count = metrics.length;
+  avgOccupancy /= count;
+  avgFlowRate /= count;
+  avgLanes = Math.round(avgLanes / count);
+
+  document.getElementById('vehicleCountStream').textContent = totalVehicles;
+  document.getElementById('laneCountStream').textContent = avgLanes;
+  document.getElementById('flowRateStream').textContent = Math.round(avgFlowRate);
+}
+
+// NEW: Save stream results to database
+async function saveStreamToDatabase(streamId, metrics, streamUrl) {
+  try {
+    const response = await fetch('/api/stream/simple', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stream_url: streamUrl,
+        duration: 3600,
+        user_id: 'anonymous',
+        metrics_history: metrics
+      })
+    });
+
+    const data = await response.json();
+    console.log('Saved to database:', data.session_id);
+
+    streamStatus.textContent = `Complete! Saved ${metrics.length} snapshots to database`;
+
+  } catch (error) {
+    console.error('Database save error:', error);
+  }
+}
+
+disconnectStreamBtn.addEventListener('click', async () => {
+  console.log('[DISCONNECT] Stopping stream...');
+
+  if (window.currentEventSource) {
+    window.currentEventSource.close();
+  }
+
+  if (window.currentStreamId) {
+    try {
+      await fetch(`/api/stream/${window.currentStreamId}/stop`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('[DISCONNECT] Error:', error);
+    }
+  }
+
+  resultsStream.style.display = 'none';
+  streamStatus.textContent = 'Enter a stream URL to begin';
+  streamStatus.style.color = '#6b7280';
+  connectStreamBtn.disabled = false;
+  connectStreamBtn.textContent = 'Connect to Stream';
+});
+
+// Disconnect stream
+ disconnectStreamBtn.addEventListener('click', async () => {
+  console.log('[DISCONNECT] Stopping stream...');
+
+  if (window.currentStreamId) {
+    try {
+      // Stop the stream
+      await fetch(`/api/stream/${window.currentStreamId}/stop`, {
+        method: 'POST'
+      });
+
+      // Get final metrics
+      const res = await fetch(`/api/stream/${window.currentStreamId}/metrics`);
+      const data = await res.json();
+
+      if (data.metrics && data.metrics.length > 0) {
+        console.log(`[DISCONNECT] Saving ${data.metrics.length} final snapshots...`);
+        updateStreamMetricsLive(data.metrics);
+
+        streamStatus.textContent = `Disconnected. Saved ${data.metrics.length} snapshots to database.`;
+        streamStatus.style.color = '#2d5f3b';
+      }
+    } catch (error) {
+      console.error('[DISCONNECT] Error:', error);
+      streamStatus.textContent = 'Disconnected with errors';
+      streamStatus.style.color = '#e74c3c';
+    }
+  }
+
+  if (window.currentMetricsInterval) {
+    clearInterval(window.currentMetricsInterval);
+  }
+
+  // Clean up UI
+  resultsStream.style.display = 'none';
+  streamStatus.textContent = 'Enter a stream URL to begin';
+  streamStatus.style.color = '#6b7280';
+  connectStreamBtn.disabled = false;
+  connectStreamBtn.textContent = 'Connect to Stream';
+
+  // Clear image
+  const imgElement = document.getElementById('liveStreamImage');
+  if (imgElement) {
+    imgElement.src = '';
+  }
+});
+
+// Update metrics display
+// Update the real-time metrics display to show trend
+function updateStreamMetrics(metricsHistory) {
+  if (!metricsHistory || metricsHistory.length === 0) return;
+
+  const latest = metricsHistory[metricsHistory.length - 1];
+
+  document.getElementById('vehicleCountStream').textContent = latest.vehicles;
+  document.getElementById('laneCountStream').textContent = latest.active_lanes;
+  document.getElementById('occupancyStream').textContent = (latest.occupancy * 100).toFixed(1) + '%';
+  document.getElementById('xwalkStream').textContent = ((data.crosswalk_blocked || 0) * 100).toFixed(1) + '%';
+  document.getElementById('flowRateStream').textContent = Math.round(latest.flow_rate_vph);
+
+  const statusEl = document.getElementById('trafficStatusStream');
+  statusEl.textContent = 'Traffic Status: ' + latest.congestion_label;
+  statusEl.className = 'status';
+
+  if (latest.congestion_level === 0) statusEl.classList.add('status-optimal');
+  else if (latest.congestion_level === 1) statusEl.classList.add('status-moderate');
+  else statusEl.classList.add('status-congested');
+
+  // NEW: Draw trend chart
+  drawMetricsTrend(metricsHistory);
+}
+
+function drawMetricsTrend(metrics) {
+  const canvas = document.getElementById('metricsChart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+
+  ctx.clearRect(0, 0, width, height);
+
+  // Draw occupancy trend line
+  ctx.strokeStyle = '#5a9fb8';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+
+  metrics.forEach((m, i) => {
+    const x = (i / metrics.length) * width;
+    const y = height - (m.occupancy * height);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+
+  ctx.stroke();
+}
+
+// For live streaming (if you implement full background processing):
+async function startLiveStream(streamId, outputUrl) {
+  currentStreamId = streamId;
+
+  // Display video
+  const videoElement = document.getElementById('liveStream');
+  videoElement.src = outputUrl;
+  videoElement.style.display = 'block';
+
+  // Poll for metrics every 2 seconds
+  metricsInterval = setInterval(async () => {
+    try {
+      const response = await fetch(`/api/stream/${streamId}/metrics`);
+      const data = await response.json();
+
+      if (response.ok && data.metrics) {
+        updateStreamMetrics(data.metrics);
+      }
+    } catch (error) {
+      console.error('Failed to fetch metrics:', error);
+    }
+  }, 2000);
+}
+
+async function loadHistory() {
+    const userId = document.getElementById('userIdInput').value || 'anonymous';
+    const res = await fetch(`/api/analysis/history?user_id=${encodeURIComponent(userId)}&limit=100`);
+    const data = await res.json();
+
+    const tbody = document.getElementById('historyBody');
+    tbody.innerHTML = '';
+
+    const rows = (data.history || []);
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="padding:1rem;color:#777;text-align:center;">No records</td></tr>';
+      return;
+    }
+
+    rows.forEach(r => {
+      const status = ['Optimal Flow','Moderate','Heavy Congestion'][r.congestion_level || 0];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="padding:.6rem;border-bottom:1px solid #e3f2fd;">${r.file_name || ''}</td>
+        <td style="padding:.6rem;border-bottom:1px solid #e3f2fd;">${r.vehicle_count || 0}</td>
+        <td style="padding:.6rem;border-bottom:1px solid #e3f2fd;">y</td>
+        <td style="padding:.6rem;border-bottom:1px solid #e3f2fd;">${status}</td>
+        <td style="padding:.6rem;border-bottom:1px solid #e3f2fd;">${new Date(r.created_at).toLocaleString()}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+
+  async function loadRealtimeSessions() {
+  const userId = document.getElementById('userIdInputRealtime').value || 'anonymous';
+
+  try {
+    const res = await fetch(`/api/realtime/sessions?user_id=${encodeURIComponent(userId)}`);
+    const data = await res.json();
+
+    const container = document.getElementById('sessionsContainer');
+    const sessionsList = document.getElementById('sessionsList');
+
+    container.innerHTML = '';
+
+    const sessions = data.sessions || [];
+    if (!sessions.length) {
+      container.innerHTML = '<p style="padding:2rem;text-align:center;color:#777;">No sessions found</p>';
+      sessionsList.style.display = 'block';
+      return;
+    }
+
+    sessions.forEach(session => {
+      const card = document.createElement('div');
+      card.className = 'session-card';
+      card.innerHTML = `
+        <div class="session-header">
+          <div class="session-title">Stream Session</div>
+          <small style="color:#6b7280;">${new Date(session.started_at).toLocaleString()}</small>
+        </div>
+        <p style="font-size:0.9rem;color:#6b7280;margin-bottom:0.5rem;">${session.stream_url}</p>
+        <div class="session-stats">
+          <div class="session-stat">
+            <div class="session-stat-value">${session.snapshot_count}</div>
+            <div class="session-stat-label">Snapshots</div>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener('click', () => viewSessionMetrics(session.session_id));
+      container.appendChild(card);
+    });
+
+    sessionsList.style.display = 'block';
+
+  } catch (error) {
+    console.error('Failed to load sessions:', error);
+    alert('Failed to load sessions: ' + error.message);
+  }
+}
+
+async function viewSessionMetrics(sessionId) {
+  try {
+    const res = await fetch(`/api/realtime/metrics/${sessionId}`);
+    const data = await res.json();
+
+    const metrics = data.metrics || [];
+    if (!metrics.length) {
+      alert('No metrics found for this session');
+      return;
+    }
+
+    // Display metrics view
+    document.getElementById('realtime-history').style.display = 'none';
+    const metricsView = document.getElementById('sessionMetricsView');
+    metricsView.style.display = 'block';
+
+    // Populate metrics table
+    const tbody = document.getElementById('metricsTableBody');
+    tbody.innerHTML = '';
+
+    metrics.forEach(m => {
+      const tr = document.createElement('tr');
+      const status = ['Optimal', 'Moderate', 'Congested'][m.congestion_level || 0];
+      tr.innerHTML = `
+        <td style="padding:0.8rem;border-bottom:1px solid #e3f2fd;">${m.timestamp.toFixed(1)}</td>
+        <td style="padding:0.8rem;border-bottom:1px solid #e3f2fd;">${m.vehicle_count}</td>
+        <td style="padding:0.8rem;border-bottom:1px solid #e3f2fd;">${m.active_lanes}</td>
+        <td style="padding:0.8rem;border-bottom:1px solid #e3f2fd;">${(m.occupancy * 100).toFixed(1)}%</td>
+        <td style="padding:0.8rem;border-bottom:1px solid #e3f2fd;">${Math.round(m.flow_rate_vph)}</td>
+        <td style="padding:0.8rem;border-bottom:1px solid #e3f2fd;">${status}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+  } catch (error) {
+    console.error('Failed to load metrics:', error);
+    alert('Failed to load metrics: ' + error.message);
+  }
+}
+
+function closeSessionView() {
+  document.getElementById('sessionMetricsView').style.display = 'none';
+  document.getElementById('realtime-history').style.display = 'block';
+}
+  </script>
+</body>
+</html>
+
+    
