@@ -20,20 +20,24 @@ import base64
 active_streams = {}
 
 # Add app directory to path
-APP_DIR = os.environ.get("APP_DIR", "/content/drive/MyDrive/Project_PFE/app")
-sys.path.insert(0, APP_DIR)
+from pathlib import Path
+
+APP_DIR = Path(os.environ.get("APP_DIR", Path(__file__).resolve().parent))
+APP_DIR.mkdir(parents=True, exist_ok=True)
+
+sys.path.insert(0, str(APP_DIR))
 os.chdir(APP_DIR)
 
-UPLOAD_DIR = os.path.join(APP_DIR, "uploads")
-OUTPUT_DIR = os.path.join(APP_DIR, "outputs")
-FRONT_DIR = os.path.join(APP_DIR, "frontend")
+UPLOAD_DIR = APP_DIR / "uploads"
+OUTPUT_DIR = APP_DIR / "outputs"
+FRONT_DIR = APP_DIR / "frontend"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(FRONT_DIR, exist_ok=True)
 
-DETECT_WEIGHTS = os.environ.get("DETECT_WEIGHTS", "")
-SEG_WEIGHTS = os.environ.get("SEG_WEIGHTS", "")
+DETECT_WEIGHTS = os.environ.get("DETECT_WEIGHTS", str(APP_DIR / "models" / "detect_best.pt"))
+SEG_WEIGHTS = os.environ.get("SEG_WEIGHTS", str(APP_DIR / "models" / "seg_best.pt"))
 
 ALLOWED_IMAGE = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".gif"}
 ALLOWED_VIDEO = {".mp4", ".m4v", ".mov", ".webm", ".mkv", ".avi"}
