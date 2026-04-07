@@ -8,6 +8,10 @@ logs/
 models/
 outputs/
 uploads/
+runs/
+models/*.pt
+models/*.onnx
+models/*.engine
 .DS_Store
 .idea/
 .vscode/
