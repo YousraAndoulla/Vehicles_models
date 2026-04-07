@@ -10,7 +10,7 @@ class BaseConfig:
     DEBUG = False
 
     # Fixed Colab tree
-    BASE_DIR = Path("/content/drive/MyDrive/Project_PFE/app")
+    BASE_DIR = BASE_DIR = Path(os.getenv("APP_DIR", Path(__file__).resolve().parent))
     UPLOAD_FOLDER  = BASE_DIR / "uploads"
     OUTPUT_FOLDER  = BASE_DIR / "outputs"
     FRONTEND_FOLDER = BASE_DIR / "frontend"
