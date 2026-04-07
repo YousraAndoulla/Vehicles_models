@@ -1,0 +1,13 @@
+flask
+flask-cors
+gunicorn
+opencv-python-headless
+numpy
+pandas
+requests
+psutil
+python-dotenv
+supabase
+ultralytics
+yt-dlp
+pytest
