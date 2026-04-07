@@ -1,0 +1,9 @@
+APP_DIR=.
+DETECT_WEIGHTS=./models/detect_best.pt
+SEG_WEIGHTS=./models/seg_best.pt
+SUPABASE_URL=
+SUPABASE_KEY=
+SUPABASE_POSTGRES_URL=
+HOST=0.0.0.0
+PORT=5000
+DEBUG=false
