@@ -1,0 +1,113 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: vehicles-ci-pipeline
+spec:
+  params:
+    - name: repo-url
+      type: string
+    - name: branch
+      type: string
+      default: main
+
+  workspaces:
+    - name: shared-workspace
+
+  tasks:
+    - name: clone
+      taskRef:
+        name: checkout
+      params:
+        - name: repo-url
+          value: "$(params.repo-url)"
+        - name: branch
+          value: "$(params.branch)"
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+
+    - name: lint
+      runAfter:
+        - clone
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: syntax-check
+            image: python:3.11-slim
+            workingDir: $(workspaces.source.path)/repo
+            env:
+              - name: PYTHONPATH
+                value: .
+              - name: APP_DIR
+                value: .
+              - name: DETECT_WEIGHTS
+                value: ./models/detect_best.pt
+              - name: SEG_WEIGHTS
+                value: ./models/seg_best.pt
+              - name: SUPABASE_URL
+                value: ""
+              - name: SUPABASE_KEY
+                value: ""
+              - name: SUPABASE_POSTGRES_URL
+                value: ""
+            script: |
+              #!/bin/sh
+              set -eux
+              python -m py_compile app.py config.py database.py utils.py
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+
+    - name: tests
+      runAfter:
+        - lint
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: install-and-test
+            image: python:3.11-slim
+            workingDir: $(workspaces.source.path)/repo
+            env:
+              - name: PYTHONPATH
+                value: .
+              - name: APP_DIR
+                value: .
+              - name: DETECT_WEIGHTS
+                value: ./models/detect_best.pt
+              - name: SEG_WEIGHTS
+                value: ./models/seg_best.pt
+              - name: SUPABASE_URL
+                value: ""
+              - name: SUPABASE_KEY
+                value: ""
+              - name: SUPABASE_POSTGRES_URL
+                value: ""
+            script: |
+              #!/bin/sh
+              set -eux
+              python -m pip install --upgrade pip
+              pip install flask flask-cors python-dotenv requests pytest
+              pytest -q
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+
+    - name: build
+      runAfter:
+        - tests
+      taskRef:
+        name: echo
+      params:
+        - name: message
+          value: "Placeholder build step for Vehicles_models"
+
+    - name: deploy
+      runAfter:
+        - build
+      taskRef:
+        name: echo
+      params:
+        - name: message
+          value: "Placeholder deploy step for Vehicles_models"
