@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: vehicles-ci-run-
+spec:
+  pipelineRef:
+    name: vehicles-ci-pipeline
+  params:
+    - name: repo-url
+      value: "https://github.com/YousraAndoulla/Vehicles_models.git"
+    - name: branch
+      value: "main"
+  workspaces:
+    - name: shared-workspace
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
