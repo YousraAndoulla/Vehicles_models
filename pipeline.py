@@ -651,7 +651,7 @@ def process_stream_with_output(stream_url: str, duration: int, detect_w: str, se
             print(f"[LIVE] YouTube error: {e}")
             return
 
-    # NEW: Open stream with better settings
+    #  Open stream with better settings
     cap = cv2.VideoCapture(actual_stream_url)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)  # Keep only 3 frames in buffer
     
@@ -679,7 +679,7 @@ def process_stream_with_output(stream_url: str, duration: int, detect_w: str, se
     line_start = (int(0.05 * width), counting_y)
     line_end = (int(0.95 * width), counting_y)
 
-    # NEW: Adaptive frame skip
+    #  Adaptive frame skip
     frame_skip = 2
     processing_times = []
     
